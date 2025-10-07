@@ -1,43 +1,144 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="pl">
 <head>
-<meta charset="utf-8">
-<title>NORMAKURWA</title>
-<style>
-body { font-family: sans-serif; display: flex; flex-direction: column; gap: 1em; padding: 1em; }
-button { padding: 0.5em 1em; }
-.warn { animation:1s forwards warnAnim }
-@keyframes warnAnim {0%{background:#faa}to{}}
-</style>
-<script defer src="script.js"></script>
+  <meta charset="UTF-8">
+  <title>NORMAKURWA</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: #f4f4f4;
+      color: #222;
+      gap: 10px;
+      padding: 20px;
+    }
+
+    h1 { margin-bottom: 10px; }
+
+    input[type="number"] {
+      width: 80px;
+      text-align: center;
+      font-size: 16px;
+    }
+
+    .section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: white;
+      border-radius: 8px;
+      padding: 15px;
+      width: 280px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    }
+
+    #add-button {
+      width: 200px;
+      height: 200px;
+      background: #c7ffc7;
+      border: 2px solid #0a0;
+      border-radius: 10px;
+      font-size: 48px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    #add-button:hover { background: #a0f0a0; }
+
+    #problem-button {
+      background: #ddf;
+      width: 60px;
+      height: 60px;
+      border-radius: 8px;
+      border: 1px solid #99f;
+      font-size: 14px;
+    }
+
+    #start-now-button {
+      background: #ffd;
+      border: 1px solid #aa0;
+      border-radius: 8px;
+      height: 40px;
+      margin-top: 10px;
+    }
+
+    #sub-button {
+      background: #fdd;
+      width: 60px;
+      height: 60px;
+      border-radius: 8px;
+      border: 1px solid #f99;
+      font-size: 24px;
+    }
+
+    #info-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-top: 10px;
+      gap: 6px;
+    }
+
+    label { font-weight: bold; }
+
+    #shift-info {
+      font-size: 18px;
+      font-weight: bold;
+      color: #007700;
+    }
+
+    .inline {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+  </style>
 </head>
 <body>
 
-<h1>Aplikacja Norma</h1>
+  <h1>NORMAKURWA</h1>
+  <div id="shift-info">Aktualna zmiana: <span id="current-shift"></span></div>
 
-<p>Czas pracy: <input id="nt" readonly></p>
-<p>Czas rozpoczęcia przerwy: 
-  <input id="brk2-h" type="number" min="0" max="23" value="22">
-  <input id="brk2-m" type="number" min="0" max="59" value="15">
-</p>
+  <div class="section">
+    <label>Czas pracy (h)</label>
+    <input id="nt" type="text" readonly>
+  </div>
 
-<p>Paczki w godzinę: <span id="units">0</span></p>
-<p>Norma w godzinę: <input id="uph-goal" type="number" min="1" max="40" value="23"></p>
-<p>Problem Solve: <span id="ps">0</span></p>
+  <div class="section">
+    <button id="add-button">+</button>
+    <div class="inline">
+      <button id="sub-button">−</button>
+      <button id="problem-button">PS</button>
+    </div>
+    <button id="start-now-button">Rozpocznij od teraz</button>
+  </div>
 
-<p>Przekraczasz normę o: <span id="dev-positive">0</span></p>
-<p>Odstajesz od normy o: <span id="dev-negative">0</span></p>
-<p>Dodatkowy czas na przerwę (min): <span id="extra-break">0</span></p>
-<p>Czas do dogonienia normy (min): <span id="time-to-catch">0</span></p>
+  <div class="section">
+    <label>Paczki w godzinę:</label>
+    <span id="units">0</span>
+    <label>Norma w godzinę:</label>
+    <input id="uph-goal" type="number" value="23">
+    <label>Problem Solve:</label>
+    <span id="ps">0</span>
+    <label>Czas rozpoczęcia przerwy:</label>
+    <div class="inline">
+      <input id="brk2-h" type="number" value="12" min="0" max="23">
+      <span>:</span>
+      <input id="brk2-m" type="number" value="30" min="0" max="59">
+    </div>
+  </div>
 
-<p>Aktualna zmiana: <span id="current-shift">–</span></p>
+  <div id="info-box" class="section">
+    <div>Przekraczasz normę o: <span id="dev-positive">0</span></div>
+    <div>Odstajesz od normy o: <span id="dev-negative">0</span></div>
+    <div>Dodatkowy czas na przerwę: <span id="extra-break">0</span> min</div>
+    <div>Czas do dogonienia normy: <span id="time-to-catch">0</span> min</div>
+  </div>
 
-<div id="buttons">
-  <button id="add-button">+</button>
-  <button id="sub-button">-</button>
-  <button id="problem-button">PS</button>
-  <button id="start-now-button">Rozpocznij od teraz</button>
-</div>
-
+  <script src="script.js"></script>
 </body>
 </html>
