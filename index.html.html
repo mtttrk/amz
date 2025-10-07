@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="pl">
+<head>
+    <meta charset="utf-8">
+    <title>NORMAKURWA</title>
+    <style>
+        .hidden{display:none}
+        .warn{animation:1s forwards warnAnim}
+        @keyframes warnAnim{0%{background:#faa}to{}}
+        #button-section{flex-direction:column;gap:5em;display:flex}
+        #add-button{background:#fff;width:20em;height:20em}
+        #problem-button{background:#ddf;width:3em;height:3em}
+        #sub-button{background:#fdd;width:2em;height:2em;margin-left:10em}
+        .hor{flex-direction:row;display:flex}
+        #log{white-space:break-spaces}
+    </style>
+    <script defer src="./script.js" type="module"></script>
+</head>
+<body>
+    <details>
+        <summary>Config</summary>
+        <p><label for="units-force">Units</label>
+            <input id="units-force" max="1000" min="1" type="number" value="0">
+        </p>
+        <p><label for="uph-goal">UPH Goal</label>
+            <input id="uph-goal" max="40" min="1" type="number" value="23">
+        </p>
+        <div class="hor">
+            <label>Lunch break</label>
+            <input id="brk2-h" max="23" min="0" type="number" value="12">
+            <input id="brk2-m" max="60" min="0" type="number" value="30">
+        </div>
+    </details>
+
+    <main>
+        <section>
+            <p>Czas pracy: <a-formatted-time id="nt" round="2" unit="h"></a-formatted-time></p>
+            <p>Przerwa: <a-formatted-time id="bt" round="2" unit="h"></a-formatted-time></p>
+            <p>Norma: <span id="units"></span> (<a-colored-number id="udev"></a-colored-number>) (<span id="uph"></span>/h)</p>
+            <p>Problem Solve: <span id="ps"></span></p>
+            <p>Aktualna zmiana: <span id="current-shift">–</span></p>
+            <p>Przekraczasz normę o: <span id="dev-positive">0</span></p>
+            <p>Odstajesz od normy o: <span id="dev-negative">0</span></p>
+            <p>Dodatkowy czas na przerwę: <span id="extra-break">0</span> min</p>
+            <p>Czas do dogonienia normy: <span id="time-to-catch">0</span> min</p>
+        </section>
+
+        <section>
+            <a-formatted-time id="timer" round="1" unit="s"></a-formatted-time> 
+            (<a-colored-number id="timer-uph-dev"></a-colored-number>/h)
+        </section>
+
+        <section id="button-section">
+            <section id="nr-section">
+                <button id="add-button">+</button>
+                <button id="rest-button">R</button>
+            </section>
+            <section>
+                <button id="problem-button">PS</button>
+                <button id="sub-button">-</button>
+            </section>
+        </section>
+    </main>
+
+    <section id="log"></section>
+</body>
+</html>
