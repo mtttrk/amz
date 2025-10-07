@@ -4,68 +4,40 @@
 <meta charset="utf-8">
 <title>NORMAKURWA</title>
 <style>
-.hidden{display:none}
-.warn{animation:1s forwards warnAnim}
-@keyframes warnAnim{0%{background:#faa}to{}}
-#button-section{flex-direction:column;gap:5em;display:flex}
-#add-button{background:#fff;width:20em;height:20em}
-#problem-button{background:#ddf;width:3em;height:3em}
-#sub-button{background:#fdd;width:2em;height:2em;margin-left:10em}
-#start-now-button{background:#dfd;width:15em;height:3em;margin-top:1em}
-.hor{flex-direction:row;display:flex}
-#log{white-space:break-spaces}
+body { font-family: sans-serif; display: flex; flex-direction: column; gap: 1em; padding: 1em; }
+button { padding: 0.5em 1em; }
+.warn { animation:1s forwards warnAnim }
+@keyframes warnAnim {0%{background:#faa}to{}}
 </style>
-<script defer src="./script.js" type="module"></script>
+<script defer src="script.js"></script>
 </head>
 <body>
 
-<main>
-<section>
-<p>Czas pracy: <a-formatted-time id="nt" round="2" unit="h"></a-formatted-time></p>
-<p>Przerwa: <a-formatted-time id="bt" round="2" unit="h"></a-formatted-time></p>
-<p>Norma: <span id="units"></span> (<a-colored-number id="udev"></a-colored-number>) (<span id="uph"></span>/h)</p>
+<h1>Aplikacja Norma</h1>
+
+<p>Czas pracy: <input id="nt" readonly></p>
+<p>Czas rozpoczęcia przerwy: 
+  <input id="brk2-h" type="number" min="0" max="23" value="22">
+  <input id="brk2-m" type="number" min="0" max="59" value="15">
+</p>
+
+<p>Paczki w godzinę: <span id="units">0</span></p>
+<p>Norma w godzinę: <input id="uph-goal" type="number" min="1" max="40" value="23"></p>
 <p>Problem Solve: <span id="ps">0</span></p>
-<p>Aktualna zmiana: <span id="current-shift">–</span></p>
+
 <p>Przekraczasz normę o: <span id="dev-positive">0</span></p>
 <p>Odstajesz od normy o: <span id="dev-negative">0</span></p>
-<p>Dodatkowy czas na przerwę: <span id="extra-break">0</span> min</p>
-<p>Czas do dogonienia normy: <span id="time-to-catch">0</span> min</p>
-</section>
+<p>Dodatkowy czas na przerwę (min): <span id="extra-break">0</span></p>
+<p>Czas do dogonienia normy (min): <span id="time-to-catch">0</span></p>
 
-<!-- Поля для ручного ввода -->
-<section>
-<label>Norma (UPH Goal/h):</label>
-<input id="uph-goal" type="number" min="1" max="40" value="23">
-</section>
+<p>Aktualna zmiana: <span id="current-shift">–</span></p>
 
-<section>
-<label>Czas rozpoczęcia przerwy:</label>
-<input id="brk2-h" type="number" min="0" max="23" value="12">
-<input id="brk2-m" type="number" min="0" max="59" value="30">
-</section>
+<div id="buttons">
+  <button id="add-button">+</button>
+  <button id="sub-button">-</button>
+  <button id="problem-button">PS</button>
+  <button id="start-now-button">Rozpocznij od teraz</button>
+</div>
 
-<section>
-<button id="start-now-button">Rozpocznij od teraz</button>
-</section>
-
-<section>
-<a-formatted-time id="timer" round="1" unit="s"></a-formatted-time>
-(<a-colored-number id="timer-uph-dev"></a-colored-number>/h)
-</section>
-
-<section id="button-section">
-<section id="nr-section">
-<button id="add-button">+</button>
-<button id="rest-button">R</button>
-</section>
-<section>
-<button id="problem-button">PS</button>
-<button id="sub-button">-</button>
-</section>
-</section>
-
-</main>
-
-<section id="log"></section>
 </body>
 </html>
