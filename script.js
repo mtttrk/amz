@@ -15,6 +15,7 @@ class d extends EventTarget {
   }
   start() {
     if (this.intervalId) clearInterval(this.intervalId);
+    this.currentTime = new Date(); // <---- фикс: старт с текущего момента
     this.intervalId = setInterval(() => this.tick(), 1000);
   }
   setBreaks(breaks) { this.breaks = breaks; this.currentBreakIndex = 0; }
@@ -78,13 +79,13 @@ var w = uphGoalInput.value, O = 1 / w;
 // --- Определение смены ---
 function updateShift() {
   let now = new Date(), h = now.getHours(), m = now.getMinutes();
-  if ((h > 6 && h < 16) || (h === 6 && m >= 0) || (h === 16 && m <= 30)) shiftLabel.textContent = "Dzienna";
+  if ((h >= 6 && h < 16) || (h === 16 && m <= 30)) shiftLabel.textContent = "Dzienna";
   else shiftLabel.textContent = "Nocna";
 }
 setInterval(updateShift, 60000);
 updateShift();
 
-// --- Определяем старт и перерывы ---
+// --- Определяем перерывы ---
 function getShiftBreaks() {
   let breaks = [];
   let now = new Date(), h = now.getHours();
@@ -95,7 +96,7 @@ function getShiftBreaks() {
 
 // --- Инициализация ---
 let now = new Date();
-var f = new d(now, getShiftBreaks(), new Date(now.getTime() + 12 * 3600000)); // <-- старт от текущего времени
+var f = new d(now, getShiftBreaks(), new Date(now.getTime() + 12 * 3600000));
 
 // --- Обновление перерыва вручную ---
 function updateBreak() {
@@ -108,18 +109,14 @@ brkM.addEventListener("input", updateBreak);
 uphGoalInput.addEventListener("input", () => { w = uphGoalInput.value; O = 1 / w; L(); });
 
 // --- Кнопки ---
-addBtn.addEventListener("click", () => { s++; f.dispatchElapsed(new Date(), t); });
-subBtn.addEventListener("click", () => { if (s > 0) s--; f.dispatchElapsed(new Date(), t); });
+addBtn.addEventListener("click", () => { s++; L(); });
+subBtn.addEventListener("click", () => { if (s > 0) s--; L(); });
 psBtn.addEventListener("click", () => { Y++; to.textContent = Y; });
 
 // --- Rozpocznij od teraz ---
 startNowBtn.addEventListener("click", () => {
-  let now = new Date();
-  let currentUnits = s, currentPS = Y;
-  f = new d(now, getShiftBreaks(), new Date(now.getTime() + 12 * 3600000));
-  A = 0; X = 0; s = currentUnits; Y = currentPS;
-  f.addEventListener("time-passed", handleTick);
-  f.start();
+  A = 0; X = 0;
+  f.currentTime = new Date(); // <---- сброс времени
   L();
 });
 
