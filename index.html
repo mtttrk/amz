@@ -37,16 +37,27 @@
     #add-button {
       width: 200px;
       height: 200px;
-      background: #c7ffc7;
-      border: 2px solid #0a0;
+      background: #bdf0bd;
+      border: 2px solid #090;
       border-radius: 10px;
       font-size: 48px;
       font-weight: bold;
       cursor: pointer;
-      transition: 0.2s;
+      transition: background 0.2s, transform 0.1s;
     }
 
-    #add-button:hover { background: #a0f0a0; }
+    #add-button:hover {
+      background: #a5e6a5;
+    }
+
+    #add-button:active {
+      transform: scale(0.95);
+    }
+
+    #add-button.pressed {
+      background: #ffb3b3;
+      border-color: #f00;
+    }
 
     #problem-button {
       background: #ddf;
@@ -120,6 +131,7 @@
   <div class="section">
     <label>Paczki:</label>
     <span id="units">0</span>
+    <div>Paczki na godzinę: <span id="uph-actual">0</span></div>
     <label>Norma na godzinę:</label>
     <input id="uph-goal" type="number" value="23">
     <label>Problem Solve:</label>

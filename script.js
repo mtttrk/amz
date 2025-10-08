@@ -1,6 +1,13 @@
 var t = "work", y = "break";
 var b = (h, m) => { let d = new Date(); d.setHours(h, m, 0, 0); return d; };
 
+function formatTime(ms) {
+  let totalMinutes = Math.floor(ms / 60000);
+  let hours = Math.floor(totalMinutes / 60);
+  let minutes = totalMinutes % 60;
+  return `${hours}:${minutes.toString().padStart(2, '0')}`;
+}
+
 // --- Таймер ---
 class d extends EventTarget {
   constructor(startTime, breaks, endTime) {
@@ -15,7 +22,7 @@ class d extends EventTarget {
   }
   start() {
     if (this.intervalId) clearInterval(this.intervalId);
-    this.currentTime = new Date(); // <---- фикс: старт с текущего момента
+    this.currentTime = new Date();
     this.intervalId = setInterval(() => this.tick(), 1000);
   }
   setBreaks(breaks) { this.breaks = breaks; this.currentBreakIndex = 0; }
@@ -41,7 +48,6 @@ class d extends EventTarget {
   }
 }
 
-// --- Перерывы ---
 class e {
   constructor(start, end) { this.start = start; this.end = end; }
   static fromStartAndDuration(start, mins) {
@@ -49,14 +55,12 @@ class e {
   }
 }
 
-// --- Событие времени ---
 class j extends Event {
   constructor(elapsed, kind) { super("time-passed"); this._elapsed = elapsed; this._kind = kind; }
   get elapsed() { return this._elapsed; }
   get kind() { return this._kind; }
 }
 
-// --- DOM элементы ---
 var fo = document.getElementById("nt"),
   brkH = document.getElementById("brk2-h"),
   brkM = document.getElementById("brk2-m"),
@@ -76,7 +80,6 @@ var fo = document.getElementById("nt"),
 var A = 0, X = 0, s = 0, Y = 0;
 var w = uphGoalInput.value, O = 1 / w;
 
-// --- Определение смены ---
 function updateShift() {
   let now = new Date(), h = now.getHours(), m = now.getMinutes();
   if ((h >= 6 && h < 16) || (h === 16 && m <= 30)) shiftLabel.textContent = "Dzienna";
@@ -85,7 +88,6 @@ function updateShift() {
 setInterval(updateShift, 60000);
 updateShift();
 
-// --- Определяем перерывы ---
 function getShiftBreaks() {
   let breaks = [];
   let now = new Date(), h = now.getHours();
@@ -94,49 +96,48 @@ function getShiftBreaks() {
   return breaks;
 }
 
-// --- Инициализация ---
 let now = new Date();
 var f = new d(now, getShiftBreaks(), new Date(now.getTime() + 12 * 3600000));
 
-// --- Обновление перерыва вручную ---
 function updateBreak() {
   f.setBreaks([e.fromStartAndDuration(b(Number(brkH.value), Number(brkM.value)), 30)]);
 }
 brkH.addEventListener("input", updateBreak);
 brkM.addEventListener("input", updateBreak);
 
-// --- Обновление нормы ---
 uphGoalInput.addEventListener("input", () => { w = uphGoalInput.value; O = 1 / w; L(); });
 
-// --- Кнопки ---
-addBtn.addEventListener("click", () => { s++; L(); });
+addBtn.addEventListener("click", () => {
+  s++;
+  L();
+  addBtn.classList.add("pressed");
+  setTimeout(() => addBtn.classList.remove("pressed"), 200);
+});
+
 subBtn.addEventListener("click", () => { if (s > 0) s--; L(); });
 psBtn.addEventListener("click", () => { Y++; to.textContent = Y; });
 
-// --- Rozpocznij od teraz ---
 startNowBtn.addEventListener("click", () => {
   A = 0; X = 0;
-  f.currentTime = new Date(); // <---- сброс времени
+  f.currentTime = new Date();
   L();
 });
 
-// --- Обновление таймера ---
 function handleTick(e) {
   if (e.kind === t) A += e.elapsed;
   if (e.kind === y) X += e.elapsed;
   L();
 }
 
-// --- Расчёты и вывод ---
 function L() {
-  fo.value = (A / 3600000).toFixed(2);
+  fo.value = formatTime(A);
   mo.textContent = s;
   to.textContent = Y;
 
   let hoursWorked = A / 3600000,
-    expected = w * hoursWorked,
-    dev = s - expected,
-    speed = hoursWorked > 0 ? s / hoursWorked : 0;
+      expected = w * hoursWorked,
+      dev = s - expected,
+      speed = hoursWorked > 0 ? s / hoursWorked : 0;
 
   devPositiveElem.textContent = dev > 0 ? dev.toFixed(1) : "0";
   devNegativeElem.textContent = dev < 0 ? Math.abs(dev).toFixed(1) : "0";
@@ -145,11 +146,15 @@ function L() {
   let extraTime = speed > w ? ((speed - w) / w) * timeWorkedMinutes : 0;
   extraBreakElem.textContent = Math.round(extraTime);
 
-  if (speed > 0 && speed < w) timeToCatchElem.textContent = Math.round((expected - s) / speed * 60);
-  else timeToCatchElem.textContent = "0";
+  if (speed > 0 && speed < w)
+    timeToCatchElem.textContent = Math.round((expected - s) / speed * 60);
+  else
+    timeToCatchElem.textContent = "0";
+
+  const uphActualElem = document.getElementById("uph-actual");
+  uphActualElem.textContent = speed.toFixed(2);
 }
 
-// --- Старт ---
 f.addEventListener("time-passed", handleTick);
 f.start();
 L();
