@@ -1,154 +1,112 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-  <meta charset="UTF-8">
-  <title>NORMAKURWA</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Panel</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      background: #f4f4f4;
-      color: #222;
-      gap: 10px;
-      padding: 20px;
+    body{
+      margin:0;
+      font-family:Arial, sans-serif;
+      background:#fff;
+      color:#000;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:flex-start;
+      padding:10px;
+      gap:10px;
+      width:100%;
+      max-width:420px;
+      margin:auto;
     }
-
-    h1 { margin-bottom: 10px; }
-
-    input[type="number"] {
-      width: 80px;
-      text-align: center;
-      font-size: 16px;
+    input, button{
+      font-size:16px;
+      border-radius:8px;
+      border:1px solid #ccc;
+      padding:8px 10px;
+      box-sizing:border-box;
     }
-
-    .section {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      background: white;
-      border-radius: 8px;
-      padding: 15px;
-      width: 280px;
-      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    input[readonly]{
+      background:#f7f7f7;
     }
-
-    #add-button {
-      width: 200px;
-      height: 200px;
-      background: #bdf0bd;
-      border: 2px solid #090;
-      border-radius: 10px;
-      font-size: 48px;
-      font-weight: bold;
-      cursor: pointer;
-      transition: background 0.2s, transform 0.1s;
+    .main-btn{
+      font-size:48px;
+      width:120px;
+      height:120px;
+      border-radius:16px;
+      border:2px solid #ddd;
+      background:#e9f7ee;
+      transition:background .1s;
     }
-
-    #add-button:hover {
-      background: #a5e6a5;
+    .main-btn:active, .main-btn.pressed{
+      background:#ffcccc;
     }
-
-    #add-button:active {
-      transform: scale(0.95);
-    }
-
-    #add-button.pressed {
-      background: #ffb3b3;
-      border-color: #f00;
-    }
-
-    #problem-button {
-      background: #ddf;
-      width: 60px;
-      height: 60px;
-      border-radius: 8px;
-      border: 1px solid #99f;
-      font-size: 14px;
-    }
-
-    #start-now-button {
-      background: #ffd;
-      border: 1px solid #aa0;
-      border-radius: 8px;
-      height: 40px;
-      margin-top: 10px;
-    }
-
-    #sub-button {
-      background: #fdd;
-      width: 60px;
-      height: 60px;
-      border-radius: 8px;
-      border: 1px solid #f99;
-      font-size: 24px;
-    }
-
-    #info-box {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      margin-top: 10px;
-      gap: 6px;
-    }
-
-    label { font-weight: bold; }
-
-    #shift-info {
-      font-size: 18px;
-      font-weight: bold;
-      color: #007700;
-    }
-
-    .inline {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-    }
+    .row{display:flex;gap:10px;width:100%;justify-content:center;align-items:center;}
+    .stats{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;width:100%;}
+    .stat{border:1px solid #eee;border-radius:6px;padding:6px;text-align:center;font-size:14px;background:#fafafa;}
+    label{font-size:12px;color:#555;}
+    .muted{font-size:12px;color:#666;}
+    .small-btn{font-size:16px;padding:8px 10px;}
+    .top-block,.bottom-block{width:100%;text-align:center;}
   </style>
 </head>
 <body>
-
-  <h1>NORMAKURWA</h1>
-  <div id="shift-info">Aktualna zmiana: <span id="current-shift"></span></div>
-
-  <div class="section">
-    <label>Czas prac</label>
-    <input id="nt" type="text" readonly>
-  </div>
-
-  <div class="section">
-    <button id="add-button">+</button>
-    <div class="inline">
-      <button id="sub-button">−</button>
-      <button id="problem-button">PS</button>
-    </div>
-    <button id="start-now-button">Rozpocznij od teraz</button>
-  </div>
-
-  <div class="section">
-    <label>Paczki:</label>
-    <span id="units">0</span>
-    <div>Paczki na godzinę: <span id="uph-actual">0</span></div>
-    <label>Norma na godzinę:</label>
-    <input id="uph-goal" type="number" value="23">
-    <label>Problem Solve:</label>
-    <span id="ps">0</span>
-    <label>Czas rozpoczęcia przerwy:</label>
-    <div class="inline">
-      <input id="brk2-h" type="number" value="12" min="0" max="23">
-      <span>:</span>
-      <input id="brk2-m" type="number" value="30" min="0" max="59">
+  <div class="top-block">
+    <div class="row">
+      <div>
+        <label>Czas prac</label><br>
+        <input id="nt" type="text" readonly value="0:00" style="width:80px;text-align:center">
+      </div>
+      <div>
+        <div id="statusText">Praca</div>
+        <div class="muted">PS: <span id="ps">0</span></div>
+      </div>
     </div>
   </div>
 
-  <div id="info-box" class="section">
-    <div>Przekraczasz normę o: <span id="dev-positive">0</span></div>
-    <div>Odstajesz od normy o: <span id="dev-negative">0</span></div>
-    <div>Dodatk. czas na przerwę: <span id="extra-break">0</span> min</div>
-    <div>Czas do dogonienia normy: <span id="time-to-catch">0</span> min</div>
+  <button id="add-button" class="main-btn">+</button>
+
+  <div class="row">
+    <button id="sub-button" class="small-btn">−</button>
+    <button id="problem-button" class="small-btn">PS</button>
+    <button id="manual-break-toggle" class="small-btn">Przerwa</button>
+  </div>
+
+  <div class="row">
+    <div>
+      <label>Paczki</label><br>
+      <span id="units">0</span>
+    </div>
+    <div>
+      <label>UPH</label><br>
+      <span id="uph-actual">0.00</span>
+    </div>
+    <div>
+      <label>Norma</label><br>
+      <input id="uph-goal" type="number" value="23" min="1" style="width:60px;text-align:center">
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><div class="muted">+ Norma</div><b id="dev-positive">0</b></div>
+    <div class="stat"><div class="muted">− Norma</div><b id="dev-negative">0</b></div>
+    <div class="stat"><div class="muted">Dodatk. przerwa</div><b id="extra-break">0</b></div>
+    <div class="stat"><div class="muted">Dogonienie (min)</div><b id="time-to-catch">0</b></div>
+  </div>
+
+  <div class="bottom-block">
+    <div class="muted">Auto przerwa</div>
+    <div class="row">
+      <input id="brk2-h" type="number" value="12" min="0" max="23" style="width:50px;text-align:center">
+      :
+      <input id="brk2-m" type="number" value="30" min="0" max="59" style="width:50px;text-align:center">
+    </div>
+    <div class="row" style="margin-top:6px;">
+      <button id="start-now-button">Start</button>
+      <button id="toggle-auto-break">Auto break</button>
+      <button id="reset-button">Reset</button>
+    </div>
   </div>
 
   <script src="script.js"></script>
