@@ -1,111 +1,325 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Panel</title>
+  <meta charset="UTF-8">
+  <title>NORMAKURWA - Kalkulator</title>
   <style>
-    body{
-      margin:0;
-      font-family:Arial, sans-serif;
-      background:#fff;
-      color:#000;
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      justify-content:flex-start;
-      padding:10px;
-      gap:10px;
-      width:100%;
-      max-width:420px;
-      margin:auto;
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: #f4f4f4;
+      color: #222;
+      gap: 15px;
+      padding: 20px;
     }
-    input, button{
-      font-size:16px;
-      border-radius:8px;
-      border:1px solid #ccc;
-      padding:8px 10px;
-      box-sizing:border-box;
+
+    h1 { margin-bottom: 5px; font-size: 24px; }
+
+    /* Общая секция для центрирования содержимого */
+    .section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 10px;
+      width: 320px; /* Увеличил ширину для лучшего вида */
     }
-    input[readonly]{
-      background:#f7f7f7;
+
+    /* Секция времени и нормы */
+    .info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      width: 100%;
+      max-width: 300px;
+      text-align: center;
+      margin-bottom: 15px;
     }
-    .main-btn{
-      font-size:48px;
-      width:120px;
-      height:120px;
-      border-radius:16px;
-      border:2px solid #ddd;
-      background:#e9f7ee;
-      transition:background .1s;
+
+    .info-box {
+      background: white;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      padding: 8px 5px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
     }
-    .main-btn:active, .main-btn.pressed{
-      background:#ffcccc;
+
+    .info-label { font-size: 14px; font-weight: normal; color: #555; }
+    .info-value { font-size: 18px; font-weight: bold; }
+
+    input[type="number"], input[type="text"] {
+      width: 100%;
+      text-align: center;
+      font-size: 18px;
+      border: none;
+      background: transparent;
+      outline: none;
+      font-weight: bold;
     }
-    .row{display:flex;gap:10px;width:100%;justify-content:center;align-items:center;}
-    .stats{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;width:100%;}
-    .stat{border:1px solid #eee;border-radius:6px;padding:6px;text-align:center;font-size:14px;background:#fafafa;}
-    label{font-size:12px;color:#555;}
-    .muted{font-size:12px;color:#666;}
-    .small-btn{font-size:16px;padding:8px 10px;}
-    .top-block,.bottom-block{width:100%;text-align:center;}
+    input[type="number"] { width: 45px; }
+
+    #nt, #uph-goal { font-size: 18px; }
+
+    /* Секция кнопок +/-/PS */
+    .controls-grid {
+      display: grid;
+      grid-template-columns: 1fr 150px 1fr;
+      grid-template-rows: auto auto;
+      gap: 10px;
+      align-items: center;
+      width: 100%;
+      max-width: 300px;
+    }
+
+    #add-button {
+      grid-area: 1 / 2 / 2 / 3; /* В центре */
+      width: 150px;
+      height: 150px;
+      background: #c7ffc7;
+      border: 2px solid #0a0;
+      border-radius: 10px;
+      font-size: 60px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    #add-button:hover { background: #a0f0a0; }
+
+    #sub-button {
+      grid-area: 1 / 1 / 2 / 2; /* Слева */
+      width: 60px;
+      height: 60px;
+      background: #fdd;
+      border-radius: 8px;
+      border: 1px solid #f99;
+      font-size: 30px;
+      justify-self: end;
+      cursor: pointer;
+    }
+
+    #ps-button {
+      grid-area: 2 / 2 / 3 / 3; /* Внизу, по центру */
+      background: #ddf;
+      width: 60px;
+      height: 40px;
+      border-radius: 8px;
+      border: 1px solid #99f;
+      font-size: 16px;
+      margin-top: -30px; /* Поднимаем ближе к + */
+      justify-self: center;
+    }
+
+    .pack-info {
+      grid-area: 1 / 3 / 3 / 4; /* Справа */
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 4px;
+      font-size: 16px;
+      line-height: 1.2;
+    }
+    #units, #speed { font-weight: bold; }
+    
+    /* Секция PS-Counter */
+    .ps-counter {
+      grid-area: 2 / 1 / 3 / 2;
+      justify-self: end;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      font-size: 14px;
+      margin-top: -30px;
+    }
+    #ps-count { font-weight: bold; }
+
+
+    /* Секция дополнительных данных */
+    .calc-info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      width: 100%;
+      max-width: 300px;
+      text-align: center;
+    }
+
+    .calc-box {
+      background: white;
+      border-radius: 6px;
+      padding: 10px 5px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      box-shadow: 0 0 3px rgba(0,0,0,0.1);
+      min-height: 50px;
+    }
+    .calc-label { font-size: 14px; color: #555; }
+    .calc-value { font-size: 20px; font-weight: bold; }
+
+    /* Секция управления */
+    .control-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      max-width: 300px;
+      margin-top: 10px;
+      padding: 10px 0;
+    }
+    .control-buttons button {
+      height: 40px;
+      border-radius: 6px;
+      border: 1px solid #aaa;
+      font-size: 14px;
+      cursor: pointer;
+      padding: 0 10px;
+      min-width: 80px;
+      transition: background-color 0.2s;
+    }
+    #start-now-button { background: #ffd; border-color: #aa0; }
+    #start-now-button:hover { background: #ffe680; }
+    #manual-break-button { background: #dff; border-color: #aaf; }
+    #manual-break-button:hover { background: #bfe8ff; }
+    #reset-button { background: #ccc; border-color: #888; }
+    #reset-button:hover { background: #bbb; }
+    #break-toggle-button { 
+        background: #f0f0f0; 
+        border-color: #888; 
+        min-width: 120px;
+    }
+    #break-toggle-button.break-active { 
+        background: #f99; 
+        border-color: #f00; 
+        color: white; 
+        font-weight: bold;
+    }
+
+    /* Секция ввода времени перерыва */
+    .break-input {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      margin-bottom: 10px;
+      font-size: 18px;
+    }
+    .break-input input[type="number"] {
+      width: 45px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      padding: 5px 0;
+      background: white;
+    }
+
+    #shift-info {
+      font-size: 16px;
+      color: #007700;
+      font-weight: bold;
+    }
+    
+    /* Дополнительная стилизация для Norma Input */
+    .norma-input-box {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        align-items: center;
+    }
+    #uph-goal {
+        width: 60px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 4px 0;
+        background: white;
+    }
+    
+    .time-norma-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        width: 100%;
+        max-width: 300px;
+    }
+    
+    .time-norma-box {
+        background: white;
+        border-radius: 6px;
+        padding: 10px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        box-shadow: 0 0 3px rgba(0,0,0,0.1);
+    }
+    .time-norma-label { font-size: 14px; color: #555; }
+    
   </style>
 </head>
 <body>
-  <div class="top-block">
-    <div class="row">
-      <div>
-        <label>Czas prac</label><br>
-        <input id="nt" type="text" readonly value="0:00" style="width:80px;text-align:center">
+
+  <h1>NORMAKURWA</h1>
+  <div id="shift-info">Zmiana: <span id="current-shift"></span></div>
+
+  <div class="section time-norma-grid">
+      <div class="time-norma-box">
+          <div class="time-norma-label">Czas pracy</div>
+          <input id="nt" type="text" value="0:00" readonly>
       </div>
-      <div>
-        <div id="statusText">Praca</div>
-        <div class="muted">PS: <span id="ps">0</span></div>
+      <div class="time-norma-box norma-input-box">
+          <div class="time-norma-label">Norma</div>
+          <input id="uph-goal" type="number" value="23" min="1">
       </div>
-    </div>
   </div>
 
-  <button id="add-button" class="main-btn">+</button>
-
-  <div class="row">
-    <button id="sub-button" class="small-btn">−</button>
-    <button id="problem-button" class="small-btn">PS</button>
-    <button id="manual-break-toggle" class="small-btn">Przerwa</button>
-  </div>
-
-  <div class="row">
-    <div>
-      <label>Paczki</label><br>
+  <div class="section controls-grid">
+    <button id="sub-button">−</button>
+    <button id="add-button">+</button>
+    <div class="pack-info">
+      <div class="info-label">Paczki</div>
       <span id="units">0</span>
+      <div class="info-label">Paczki/godz.</div>
+      <span id="speed">0.00</span>
     </div>
-    <div>
-      <label>UPH</label><br>
-      <span id="uph-actual">0.00</span>
-    </div>
-    <div>
-      <label>Norma</label><br>
-      <input id="uph-goal" type="number" value="23" min="1" style="width:60px;text-align:center">
+    <div class="ps-counter">
+        <button id="ps-button">PS</button>
+        <div class="info-label">PS: <span id="ps-count">0</span></div>
     </div>
   </div>
 
-  <div class="stats">
-    <div class="stat"><div class="muted">+ Norma</div><b id="dev-positive">0</b></div>
-    <div class="stat"><div class="muted">− Norma</div><b id="dev-negative">0</b></div>
-    <div class="stat"><div class="muted">Dodatk. przerwa</div><b id="extra-break">0</b></div>
-    <div class="stat"><div class="muted">Dogonienie (min)</div><b id="time-to-catch">0</b></div>
-  </div>
-
-  <div class="bottom-block">
-    <div class="muted">Auto przerwa</div>
-    <div class="row">
-      <input id="brk2-h" type="number" value="12" min="0" max="23" style="width:50px;text-align:center">
-      :
-      <input id="brk2-m" type="number" value="30" min="0" max="59" style="width:50px;text-align:center">
+  <div class="section calc-info-grid">
+    <div class="calc-box">
+      <div class="calc-label">+ Norma</div>
+      <div class="calc-value" id="dev-positive">0</div>
     </div>
-    <div class="row" style="margin-top:6px;">
+    <div class="calc-box">
+      <div class="calc-label">- Norma</div>
+      <div class="calc-value" id="dev-negative">0</div>
+    </div>
+    <div class="calc-box">
+      <div class="calc-label">Dodatk. przerwa</div>
+      <div class="calc-value" id="extra-break">0</div>
+    </div>
+    <div class="calc-box">
+      <div class="calc-label">Dogonienie (min)</div>
+      <div class="calc-value" id="time-to-catch">0</div>
+    </div>
+  </div>
+  
+  <div class="section">
+    <div class="info-label">Czas rozpoczęcia przerwy:</div>
+    <div class="break-input">
+      <input id="brk2-h" type="number" value="12" min="0" max="23">
+      <span>:</span>
+      <input id="brk2-m" type="number" value="30" min="0" max="59">
+    </div>
+    <div class="control-buttons">
       <button id="start-now-button">Start</button>
-      <button id="toggle-auto-break">Auto break</button>
+      <button id="manual-break-button">Auto break</button>
       <button id="reset-button">Reset</button>
+      <button id="break-toggle-button">Przerwa</button>
     </div>
   </div>
 
