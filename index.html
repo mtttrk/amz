@@ -12,33 +12,48 @@
     }
     .container{
       max-width:420px;margin:0 auto;padding:10px;
-      display:flex;flex-direction:column;align-items:center;gap:16px;
+      display:flex;flex-direction:column;align-items:center;gap:14px;
     }
-    .center{text-align:center;}
+
+    /* top row: Norma + Czas pracy */
+    .top-row{
+      display:flex;align-items:center;justify-content:center;
+      gap:18px;width:100%;
+    }
+    .top-row .block{
+      display:flex;flex-direction:column;align-items:center;gap:6px;
+      min-width:120px;
+    }
+
     label{font-size:12px;color:#666;}
     input[type="text"],input[type="number"]{
       border:1px solid #ddd;border-radius:8px;padding:6px 8px;
       font-size:16px;text-align:center;
     }
     input[readonly]{background:#f6f6f6;}
+
     .big-btn{
       width:100px;height:100px;border-radius:12px;
       border:1px solid #ccc;background:#eef7f0;
       font-size:42px;cursor:pointer;
-      transition:background .15s;
+      transition:background .12s,transform .08s;
+      display:inline-flex;align-items:center;justify-content:center;
     }
-    .big-btn:active{background:#ffdede;}
+    .big-btn:active{transform:translateY(2px);background:#ffdede;}
+    .big-btn.pressed{transform:scale(.98);}
+
     .small-btn{
       padding:6px 10px;border:1px solid #ccc;
       border-radius:8px;background:#f8f8f8;cursor:pointer;
     }
+
     .stats{
       display:grid;grid-template-columns:repeat(2,1fr);
-      gap:6px;width:100%;
+      gap:8px;width:100%;
     }
     .stat{
       border:1px solid #f2f2f2;border-radius:8px;
-      padding:6px;text-align:center;
+      padding:8px;text-align:center;background:#fff;
     }
     .muted{font-size:12px;color:#666;}
     .big-number{font-weight:700;font-size:18px;}
@@ -50,51 +65,72 @@
       display:flex;flex-direction:column;align-items:flex-start;
       gap:6px;font-size:14px;
     }
-    footer{font-size:12px;color:#666;padding:8px;text-align:center;}
+
+    .autostart{
+      margin-top:-6px;font-size:12px;color:#666;text-align:center;
+    }
+
+    @media (max-width:420px){
+      .top-row{gap:10px}
+      .big-btn{width:84px;height:84px;font-size:36px}
+    }
   </style>
 </head>
 <body>
   <div class="container">
 
-    <div class="center">
-      <div><label>Czas pracy</label></div>
-      <input id="nt" type="text" readonly value="0:00" style="width:80px;">
-      <div id="statusText" class="muted">Praca</div>
+    <!-- Верхняя строка: Norma слева и Czas pracy справа -->
+    <div class="top-row">
+      <div class="block">
+        <div><label>Norma</label></div>
+        <input id="norm-input" type="number" min="1" value="23" style="width:90px;">
+      </div>
+
+      <div class="block">
+        <div><label>Czas pracy</label></div>
+        <input id="nt" type="text" readonly value="0:00" style="width:100px;">
+      </div>
     </div>
 
-    <div class="row">
+    <!-- Основной блок с кнопками -->
+    <div class="row" style="margin-top:6px;">
       <button id="norm-minus" class="big-btn" style="width:70px;height:70px;font-size:28px;">−</button>
-      <button id="add-button" class="big-btn">+</button>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:6px;">
+        <button id="add-button" class="big-btn">+</button>
+        <div class="autostart">Autostart przy pierwszym naciśnięciu +</div>
+      </div>
       <div class="side">
         <div>Paczki: <span id="units">0</span></div>
         <div>Pacz/godz: <span id="uph-actual">0.00</span></div>
       </div>
     </div>
 
+    <!-- PS секция -->
     <div class="row">
       <button id="ps-button" class="small-btn">PS +</button>
       <button id="ps-minus" class="small-btn">PS −</button>
       <div>PS: <span id="ps">0</span></div>
     </div>
 
-    <div class="stats">
+    <!-- Статистика -->
+    <div class="stats" style="margin-top:6px;">
       <div class="stat"><div class="muted">Przekraczasz normę</div><div class="big-number" id="dev-positive">0</div></div>
       <div class="stat"><div class="muted">Odstajesz</div><div class="big-number" id="dev-negative">0</div></div>
       <div class="stat"><div class="muted">Dodatkowy czas (min)</div><div class="big-number" id="extra-break">0</div></div>
       <div class="stat"><div class="muted">Czas do dogonienia (min)</div><div class="big-number" id="time-to-catch">0</div></div>
     </div>
 
-    <div class="center">
+    <!-- Ввод времени перерыва -->
+    <div class="center" style="text-align:center;width:100%;">
       <label>Start przerwy (HH:MM) — 30 min</label><br>
       <input id="brk-h" type="number" min="0" max="23" value="12" style="width:60px;"> :
       <input id="brk-m" type="number" min="0" max="59" value="30" style="width:60px;">
     </div>
 
-    <div class="center">
+    <div class="center" style="width:100%;text-align:center;">
       <button id="reset-button" class="small-btn">Reset</button>
     </div>
 
-    <footer>Autostart przy pierwszym naciśnięciu +</footer>
   </div>
 
   <script src="script.js"></script>
