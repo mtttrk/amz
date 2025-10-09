@@ -11,125 +11,103 @@
       font-family:Inter,Arial,sans-serif;
     }
     .container{
-      max-width:420px;margin:0 auto;padding:10px;
-      display:flex;flex-direction:column;align-items:center;gap:14px;
+      max-width:440px;margin:0 auto;padding:10px;
+      display:flex;flex-direction:column;align-items:center;gap:16px;
     }
-
-    /* Верхняя строка */
-    .top-row{
-      display:flex;align-items:center;justify-content:center;
-      gap:18px;width:100%;
-    }
-    .top-row .block{
-      display:flex;flex-direction:column;align-items:center;gap:6px;
-      min-width:120px;
-    }
-
     label{font-size:12px;color:#666;}
     input[type="text"],input[type="number"]{
       border:1px solid #ddd;border-radius:8px;padding:6px 8px;
       font-size:16px;text-align:center;
     }
     input[readonly]{background:#f6f6f6;}
-
+    .center{text-align:center;}
+    .row{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;}
     .big-btn{
-      width:90px;height:90px;border-radius:12px;
+      width:100px;height:100px;border-radius:12px;
       border:1px solid #ccc;background:#eef7f0;
       font-size:42px;cursor:pointer;
-      transition:background .12s,transform .08s;
-      display:flex;align-items:center;justify-content:center;
+      transition:background .15s,transform .1s;
     }
-    .big-btn:active{background:#ffdede;transform:scale(0.96);}
-    .small-btn{
-      padding:6px 10px;border:1px solid #ccc;
-      border-radius:8px;background:#f8f8f8;cursor:pointer;
+    .big-btn:active{background:#ffdede;transform:scale(0.97);}
+    .small-minus{
+      width:50px;height:50px;border-radius:10px;
+      border:1px solid #ccc;background:#f8f8f8;
+      font-size:28px;cursor:pointer;
+      transition:background .15s,transform .1s;
     }
-
-    .row{
-      display:flex;align-items:center;justify-content:center;
-      gap:10px;width:100%;
-    }
-
-    .side{
-      display:flex;flex-direction:column;align-items:flex-start;
-      gap:4px;font-size:14px;
-    }
-
+    .small-minus:active{background:#ffdede;transform:scale(0.97);}
     .stats{
       display:grid;grid-template-columns:repeat(2,1fr);
-      gap:8px;width:100%;
+      gap:6px;width:100%;
     }
     .stat{
       border:1px solid #f2f2f2;border-radius:8px;
-      padding:8px;text-align:center;background:#fff;
+      padding:6px;text-align:center;
     }
     .muted{font-size:12px;color:#666;}
     .big-number{font-weight:700;font-size:18px;}
-
-    .autostart{
-      font-size:12px;color:#666;text-align:center;margin-top:-4px;
+    footer{font-size:12px;color:#666;padding:8px;text-align:center;}
+    .side{
+      display:flex;flex-direction:column;align-items:flex-start;
+      gap:6px;font-size:14px;
     }
-
-    @media (max-width:420px){
-      .big-btn{width:80px;height:80px;font-size:36px;}
-      .row{gap:8px;}
+    .top{
+      display:flex;align-items:center;justify-content:center;
+      gap:20px;width:100%;
+    }
+    .norma-block{
+      display:flex;flex-direction:column;align-items:center;gap:6px;
     }
   </style>
 </head>
 <body>
   <div class="container">
 
-    <!-- ВЕРХНЯЯ СТРОКА -->
-    <div class="top-row">
-      <div class="block">
-        <div><label>Czas pracy</label></div>
-        <input id="nt" type="text" readonly value="0:00" style="width:100px;">
+    <div class="top">
+      <div class="norma-block">
+        <label>Norma</label>
+        <input id="norma-input" type="number" value="23" min="1" style="width:70px;">
+      </div>
+
+      <div class="center">
+        <label>Czas pracy</label><br>
+        <input id="nt" type="text" readonly value="00:00:00" style="width:100px;">
       </div>
     </div>
 
-    <!-- ОСНОВНОЙ РЯД: -  +  НОРМА/ПАЧКИ -->
-    <div class="row" style="margin-top:6px;">
-      <button id="minus-button" class="big-btn" style="font-size:38px;">−</button>
-
-      <div style="display:flex;flex-direction:column;align-items:center;gap:6px;">
-        <button id="add-button" class="big-btn">+</button>
-        <div class="autostart">Autostart przy pierwszym naciśnięciu +</div>
-      </div>
-
-      <div class="side" style="align-items:flex-start;">
-        <div>Norma: <input id="norm-input" type="number" min="1" value="23" style="width:60px;"></div>
-        <div>Pacz/godz: <span id="uph-actual">0.00</span></div>
-        <div>Paczki: <span id="units">0</span></div>
-      </div>
-    </div>
-
-    <!-- PS СЕКЦИЯ -->
     <div class="row">
-      <button id="ps-button" class="small-btn">PS +</button>
-      <button id="ps-minus" class="small-btn">PS −</button>
+      <button id="norm-minus" class="small-minus">−</button>
+      <button id="add-button" class="big-btn">+</button>
+      <div class="side">
+        <div>Paczki: <span id="units">0</span></div>
+        <div>Pacz/godz: <span id="uph-actual">0.00</span></div>
+      </div>
+    </div>
+
+    <div class="row">
+      <button id="ps-button" class="small-minus" style="width:auto;padding:6px 12px;">PS +</button>
+      <button id="ps-minus" class="small-minus" style="width:auto;padding:6px 12px;">PS −</button>
       <div>PS: <span id="ps">0</span></div>
     </div>
 
-    <!-- СТАТИСТИКА -->
-    <div class="stats" style="margin-top:6px;">
+    <div class="stats">
       <div class="stat"><div class="muted">Przekraczasz normę</div><div class="big-number" id="dev-positive">0</div></div>
       <div class="stat"><div class="muted">Odstajesz</div><div class="big-number" id="dev-negative">0</div></div>
       <div class="stat"><div class="muted">Dodatkowy czas (min)</div><div class="big-number" id="extra-break">0</div></div>
       <div class="stat"><div class="muted">Czas do dogonienia (min)</div><div class="big-number" id="time-to-catch">0</div></div>
     </div>
 
-    <!-- ВВОД ВРЕМЕНИ ПЕРЕРЫВА -->
-    <div class="center" style="text-align:center;width:100%;">
+    <div class="center">
       <label>Start przerwy (HH:MM) — 30 min</label><br>
       <input id="brk-h" type="number" min="0" max="23" value="12" style="width:60px;"> :
       <input id="brk-m" type="number" min="0" max="59" value="30" style="width:60px;">
     </div>
 
-    <!-- КНОПКА СБРОСА -->
-    <div class="center" style="width:100%;text-align:center;">
-      <button id="reset-button" class="small-btn">Reset</button>
+    <div class="center">
+      <button id="reset-button" class="small-minus" style="width:auto;padding:6px 12px;">Reset</button>
     </div>
 
+    <footer>Autostart przy pierwszym naciśnięciu +</footer>
   </div>
 
   <script src="script.js"></script>
