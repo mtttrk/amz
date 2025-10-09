@@ -1,309 +1,98 @@
-// --- Константы ---
-const WORK = "work";
-const BREAK = "break";
-const MANUAL_BREAK_DURATION = 30; // Длительность ручной "автоматической" паузы в минутах (30 минут по умолчанию)
+// Final clean centered tracker with auto-start by first + click
 
-// --- Утилиты ---
-const setTime = (h, m) => { let d = new Date(); d.setHours(h, m, 0, 0); return d; };
-const formatTime = (ms) => {
-    let totalSeconds = Math.round(ms / 1000);
-    let hours = Math.floor(totalSeconds / 3600);
-    let minutes = Math.floor((totalSeconds % 3600) / 60);
-    return `${hours}:${minutes.toString().padStart(2, '0')}`;
-};
+const elTime=document.getElementById('nt');
+const elUnits=document.getElementById('units');
+const elUPH=document.getElementById('uph-actual');
+const elDevPos=document.getElementById('dev-positive');
+const elDevNeg=document.getElementById('dev-negative');
+const elExtra=document.getElementById('extra-break');
+const elCatch=document.getElementById('time-to-catch');
+const addBtn=document.getElementById('add-button');
+const normMinusBtn=document.getElementById('norm-minus');
+const psBtn=document.getElementById('ps-button');
+const psMinusBtn=document.getElementById('ps-minus');
+const resetBtn=document.getElementById('reset-button');
+const brkH=document.getElementById('brk-h');
+const brkM=document.getElementById('brk-m');
+const psCountEl=document.getElementById('ps');
+const statusText=document.getElementById('statusText');
 
-// --- Перерывы ---
-class BreakPeriod {
-    constructor(start, end) { this.start = start; this.end = end; }
-    static fromStartAndDuration(start, mins) {
-        return new BreakPeriod(start, new Date(start.getTime() + mins * 60000));
-    }
+let startTime=null,packs=0,psCount=0,timerId=null,lastAddAt=0,goalPerHour=23;
+const MIN_ADD_INTERVAL=500;
+
+function pad2(n){return n.toString().padStart(2,'0');}
+function formatTimeMs(ms){if(!isFinite(ms)||ms<=0)return'0:00';const t=Math.floor(ms/60000),h=Math.floor(t/60),m=t%60;return`${h}:${pad2(m)}`;}
+
+function getBreakIntervalForDate(ref){
+  const h=+brkH.value,m=+brkM.value;
+  const s=new Date(ref);
+  s.setHours(h,m,0,0);
+  return{start:s,end:new Date(s.getTime()+30*60000)};
+}
+function overlap(a1,a2,b1,b2){return Math.max(0,Math.min(a2,b2)-Math.max(a1,b1));}
+
+function computeWorkedMs(now){
+  if(!startTime)return 0;
+  const s=startTime.getTime(),e=now.getTime();
+  if(e<=s)return 0;
+  const brk=getBreakIntervalForDate(now),
+        brkPrev=getBreakIntervalForDate(new Date(now.getTime()-86400000));
+  const overlapMs=overlap(s,e,brk.start.getTime(),brk.end.getTime())+
+                  overlap(s,e,brkPrev.start.getTime(),brkPrev.end.getTime());
+  return Math.max(0,e-s-overlapMs);
 }
 
-// --- Событие времени ---
-class TimeEvent extends Event {
-    constructor(elapsed, kind) { super("time-passed"); this._elapsed = elapsed; this._kind = kind; }
-    get elapsed() { return this._elapsed; }
-    get kind() { return this._kind; }
+function updateAll(){
+  const now=new Date();
+  const workedMs=computeWorkedMs(now);
+  elTime.value=formatTimeMs(workedMs);
+  elUnits.textContent=packs;
+  const hrs=workedMs/3600000;
+  const uph=hrs>0?packs/hrs:0;
+  elUPH.textContent=uph.toFixed(2);
+  const expected=goalPerHour*hrs;
+  const dev=packs-expected;
+  elDevPos.textContent=dev>0?dev.toFixed(1):'0';
+  elDevNeg.textContent=dev<0?Math.abs(dev).toFixed(1):'0';
+  const timeMin=Math.round(workedMs/60000);
+  elExtra.textContent=uph>goalPerHour?Math.round(((uph-goalPerHour)/goalPerHour)*timeMin):'0';
+  if(uph>0&&uph<goalPerHour){
+    const remaining=Math.max(0,expected-packs);
+    const minutesToCatch=Math.ceil((remaining/uph)*60);
+    elCatch.textContent=isFinite(minutesToCatch)?minutesToCatch:'0';
+  }else elCatch.textContent='0';
+
+  const b=getBreakIntervalForDate(now);
+  const inBreak=now>=b.start&&now<b.end;
+  statusText.textContent=inBreak?'Przerwa':'Praca';
 }
 
-// --- Таймер ---
-class Timer extends EventTarget {
-    constructor(startTime, breaks, endTime) {
-        super();
-        this.startTime = startTime;
-        this.breaks = breaks;
-        this.endTime = endTime;
-        this.currentTime = startTime;
-        this.currentKind = WORK;
-        this.currentBreakIndex = 0;
-        this.intervalId = null;
-        this.isManualBreakActive = false;
-        this.manualBreakStart = null;
-    }
+function startTimer(){if(timerId)clearInterval(timerId);timerId=setInterval(updateAll,1000);}
 
-    start() {
-        if (this.intervalId) clearInterval(this.intervalId);
-        this.currentTime = new Date();
-        this.intervalId = setInterval(() => this.tick(), 1000);
-    }
-    
-    stop() {
-        if (this.intervalId) {
-            clearInterval(this.intervalId);
-            this.intervalId = null;
-        }
-    }
-
-    setBreaks(breaks) { this.breaks = breaks; this.currentBreakIndex = 0; }
-
-    toggleManualBreak(isActive) {
-        let now = new Date();
-        if (isActive && !this.isManualBreakActive) {
-            this.dispatchElapsed(now, BREAK); // Завершаем текущий период (работа/перерыв)
-            this.manualBreakStart = now;
-            this.isManualBreakActive = true;
-            this.currentKind = BREAK;
-        } else if (!isActive && this.isManualBreakActive) {
-            this.dispatchElapsed(now, WORK); // Завершаем ручной перерыв
-            this.manualBreakStart = null;
-            this.isManualBreakActive = false;
-            this.currentKind = WORK;
-        }
-    }
-
-    tick() {
-        let now = new Date();
-        if (this.isManualBreakActive) {
-            // Если активен ручной перерыв, автоматические перерывы игнорируются
-            this.currentTime = now;
-            return;
-        }
-
-        let brk = this.breaks[this.currentBreakIndex];
-        
-        // Автоматические перерывы
-        if (brk) {
-            if (this.currentTime.getTime() < brk.start.getTime() && now.getTime() >= brk.start.getTime()) {
-                this.dispatchElapsed(brk.start, BREAK);
-            } else if (this.currentTime.getTime() < brk.end.getTime() && now.getTime() >= brk.end.getTime()) {
-                this.dispatchElapsed(brk.end, WORK);
-                if (this.currentBreakIndex < this.breaks.length - 1) this.currentBreakIndex++;
-            }
-        }
-    }
-
-    getElapsed(now) { return now.getTime() - this.currentTime.getTime(); }
-
-    dispatchElapsed(time, nextKind) {
-        let limitedTime = new Date(Math.min(time.getTime(), this.endTime.getTime()));
-        let elapsed = this.getElapsed(limitedTime);
-        if (elapsed > 0) {
-            let event = new TimeEvent(elapsed, this.currentKind);
-            this.dispatchEvent(event);
-        }
-        this.currentTime = limitedTime;
-        this.currentKind = nextKind;
-    }
-}
-
-// --- DOM элементы ---
-const fo = document.getElementById("nt"), // Czas pracy
-    brkH = document.getElementById("brk2-h"),
-    brkM = document.getElementById("brk2-m"),
-    mo = document.getElementById("units"), // Paczki
-    speedElem = document.getElementById("speed"), // Paczki/godz.
-    uphGoalInput = document.getElementById("uph-goal"),
-    psCountElem = document.getElementById("ps-count"), // PS Counter
-    devPositiveElem = document.getElementById("dev-positive"),
-    devNegativeElem = document.getElementById("dev-negative"),
-    extraBreakElem = document.getElementById("extra-break"),
-    timeToCatchElem = document.getElementById("time-to-catch"),
-    addBtn = document.getElementById("add-button"),
-    subBtn = document.getElementById("sub-button"),
-    psBtn = document.getElementById("ps-button"),
-    startNowBtn = document.getElementById("start-now-button"),
-    resetBtn = document.getElementById("reset-button"),
-    manualBreakBtn = document.getElementById("manual-break-button"),
-    breakToggleBtn = document.getElementById("break-toggle-button"),
-    shiftLabel = document.getElementById("current-shift");
-
-// --- Состояние приложения ---
-let netWorkTime = 0, // A - Время работы (мс)
-    breakTime = 0,   // X - Время перерывов (мс)
-    psTime = 0,      // Новая переменная для Problem Solve Time (мс)
-    packagesCount = 0, // s - Количество пачек
-    psCounter = 0;   // Y - Количество PS
-
-let uphGoal = Number(uphGoalInput.value);
-let isPsActive = false; // Состояние PS
-
-// --- Определение смены ---
-function updateShift() {
-    let now = new Date(), h = now.getHours();
-    // Смена "Dzienna" (Дневная) с 6:00 до 16:30
-    if ((h >= 6 && h < 16) || (h === 16 && now.getMinutes() <= 30)) {
-        shiftLabel.textContent = "Dzienna";
-    } else {
-        shiftLabel.textContent = "Nocna";
-    }
-}
-setInterval(updateShift, 60000);
-updateShift();
-
-// --- Определяем перерывы (автоматическая логика) ---
-function getShiftBreaks() {
-    let breaks = [];
-    let now = new Date(), h = now.getHours();
-    // Дневная смена: 12:30
-    if ((h >= 6 && h < 16) || (h === 16 && now.getMinutes() <= 30)) {
-        breaks.push(BreakPeriod.fromStartAndDuration(setTime(12, 30), 30));
-    // Ночная смена: 22:15
-    } else {
-        breaks.push(BreakPeriod.fromStartAndDuration(setTime(22, 15), 30));
-    }
-    return breaks;
-}
-
-// --- Инициализация таймера ---
-let now = new Date();
-// Устанавливаем конец смены на 12 часов после начала (для простоты)
-const shiftEnd = new Date(now.getTime() + 12 * 3600000); 
-var timer = new Timer(now, getShiftBreaks(), shiftEnd);
-
-// --- Обновление перерыва вручную ---
-function updateBreak() {
-    timer.setBreaks([BreakPeriod.fromStartAndDuration(setTime(Number(brkH.value), Number(brkM.value)), MANUAL_BREAK_DURATION)]);
-}
-brkH.addEventListener("input", updateBreak);
-brkM.addEventListener("input", updateBreak);
-
-// --- Обновление нормы ---
-uphGoalInput.addEventListener("input", () => { 
-    uphGoal = Number(uphGoalInput.value); 
-    if (uphGoal <= 0 || isNaN(uphGoal)) { uphGoal = 1; uphGoalInput.value = 1; } // Защита от 0/NaN
-    updateUI(); 
+addBtn.addEventListener('click',()=>{
+  const now=Date.now();
+  if(now-lastAddAt<MIN_ADD_INTERVAL)return;
+  lastAddAt=now;
+  if(!startTime){startTime=new Date();startTimer();}
+  packs++;
+  addBtn.classList.add('pressed');
+  setTimeout(()=>addBtn.classList.remove('pressed'),150);
+  updateAll();
 });
 
-// --- Кнопки Пакеты ---
-addBtn.addEventListener("click", () => { packagesCount++; updateUI(); });
-subBtn.addEventListener("click", () => { if (packagesCount > 0) packagesCount--; updateUI(); });
+normMinusBtn.addEventListener('click',()=>{if(packs>0)packs--;updateAll();});
+psBtn.addEventListener('click',()=>{psCount++;psCountEl.textContent=psCount;});
+psMinusBtn.addEventListener('click',()=>{if(psCount>0)psCount--;psCountEl.textContent=psCount;});
 
-// --- Кнопка PS (Problem Solve) ---
-psBtn.addEventListener("click", () => {
-    isPsActive = !isPsActive;
-    if (isPsActive) {
-        psCounter++;
-        psBtn.textContent = "PS (ON)";
-        psBtn.style.backgroundColor = '#f99';
-    } else {
-        psBtn.textContent = "PS";
-        psBtn.style.backgroundColor = '#ddf';
-    }
-    psCountElem.textContent = psCounter;
-    updateUI();
+resetBtn.addEventListener('click',()=>{
+  if(timerId)clearInterval(timerId);
+  startTime=null;packs=0;psCount=0;
+  elUnits.textContent='0';elUPH.textContent='0.00';
+  elDevPos.textContent='0';elDevNeg.textContent='0';
+  elExtra.textContent='0';elCatch.textContent='0';
+  elTime.value='0:00';psCountEl.textContent='0';
+  statusText.textContent='Praca';
 });
 
-// --- Кнопка Start ---
-startNowBtn.addEventListener("click", () => {
-    netWorkTime = 0; 
-    breakTime = 0;
-    psTime = 0;
-    packagesCount = 0;
-    psCounter = 0;
-    timer.currentTime = new Date();
-    timer.isManualBreakActive = false;
-    breakToggleBtn.classList.remove('break-active');
-    breakToggleBtn.textContent = 'Przerwa';
-    isPsActive = false;
-    psBtn.textContent = "PS";
-    psBtn.style.backgroundColor = '#ddf';
-    updateUI();
-});
-
-// --- Кнопка Reset ---
-resetBtn.addEventListener("click", () => {
-    // Сброс всех счётчиков (как startNow, но без сброса таймера)
-    netWorkTime = 0; 
-    breakTime = 0;
-    psTime = 0;
-    packagesCount = 0;
-    psCounter = 0;
-    updateUI();
-});
-
-// --- Кнопка Auto Break (Manual Update) ---
-manualBreakBtn.addEventListener("click", () => {
-    updateBreak();
-});
-
-
-// --- Кнопка Przerwa (Ручной перерыв) ---
-breakToggleBtn.addEventListener("click", () => {
-    const isNowBreak = timer.isManualBreakActive;
-    timer.toggleManualBreak(!isNowBreak);
-
-    if (!isNowBreak) {
-        breakToggleBtn.classList.add('break-active');
-        breakToggleBtn.textContent = 'PRACA';
-    } else {
-        breakToggleBtn.classList.remove('break-active');
-        breakToggleBtn.textContent = 'Przerwa';
-    }
-    updateUI();
-});
-
-
-// --- Обработчик таймера ---
-function handleTimePass(e) {
-    if (e.kind === WORK) netWorkTime += e.elapsed;
-    if (e.kind === BREAK) breakTime += e.elapsed;
-    if (isPsActive) psTime += e.elapsed; // PS считается как время, проведённое в PS
-    
-    // В исходном коде PS время не учитывалось, добавляем его в общую логику.
-    // Важно: PS-время УЖЕ входит в netWorkTime, поэтому для расчёта НЕТТО-рабочего времени мы его ВЫЧИТАЕМ.
-    updateUI();
-}
-
-// --- Расчёты и вывод (L) ---
-function updateUI() {
-    const netWorkingTimeMs = netWorkTime - psTime;
-    let hoursWorked = netWorkingTimeMs / 3600000;
-    
-    // Вывод времени
-    fo.value = formatTime(netWorkingTimeMs > 0 ? netWorkingTimeMs : 0);
-    mo.textContent = packagesCount;
-    psCountElem.textContent = psCounter;
-
-    // Расчёты нормы
-    let expected = uphGoal * hoursWorked;
-    let speed = hoursWorked > 0 ? packagesCount / hoursWorked : 0;
-    
-    // Вывод скорости
-    speedElem.textContent = speed.toFixed(2);
-
-    // Отклонение от нормы
-    let dev = packagesCount - expected;
-    devPositiveElem.textContent = dev > 0 ? Math.round(dev) : "0";
-    devNegativeElem.textContent = dev < 0 ? Math.round(Math.abs(dev)) : "0";
-
-    // Дополнительный перерыв (Dodatk. przerwa)
-    let timeWorkedMinutes = netWorkingTimeMs / 60000;
-    let extraTime = speed > uphGoal ? ((speed - uphGoal) / uphGoal) * timeWorkedMinutes : 0;
-    extraBreakElem.textContent = Math.round(extraTime);
-
-    // Время догнать норму (Dogonienie (min))
-    if (speed > 0 && speed < uphGoal) {
-        let packsToCatch = expected - packagesCount;
-        let timeToCatch = packsToCatch / speed * 60; // (packs / packs/hour) * 60 min/hour
-        timeToCatchElem.textContent = Math.round(timeToCatch);
-    } else {
-        timeToCatchElem.textContent = "0";
-    }
-}
-
-// --- Старт ---
-timer.addEventListener("time-passed", handleTimePass);
-timer.start();
-updateBreak(); // Инициализация
-updateUI(); // Инициализация
+brkH.addEventListener('input',updateAll);
+brkM.addEventListener('input',updateAll);
