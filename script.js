@@ -10,6 +10,7 @@ const normMinusBtn=document.getElementById('norm-minus');
 const psBtn=document.getElementById('ps-button');
 const psMinusBtn=document.getElementById('ps-minus');
 const resetBtn=document.getElementById('reset-button');
+const pauseBtn=document.getElementById('pause-button');
 const brkH=document.getElementById('brk-h');
 const brkM=document.getElementById('brk-m');
 const psCountEl=document.getElementById('ps');
@@ -17,6 +18,7 @@ const normaInput=document.getElementById('norma-input');
 
 let startTime=null,packs=0,psCount=0,timerId=null,lastAddAt=0;
 let goalPerHour=+normaInput.value;
+let paused=false,pausedAt=0,pausedTotal=0;
 const MIN_ADD_INTERVAL=500;
 
 function pad2(n){return n.toString().padStart(2,'0');}
@@ -45,7 +47,8 @@ function computeWorkedMs(now){
         brkPrev=getBreakIntervalForDate(new Date(now.getTime()-86400000));
   const overlapMs=overlap(s,e,brk.start.getTime(),brk.end.getTime())+
                   overlap(s,e,brkPrev.start.getTime(),brkPrev.end.getTime());
-  return Math.max(0,e-s-overlapMs);
+  // вычитаем паузы
+  return Math.max(0,e-s-overlapMs-pausedTotal-(paused?(now.getTime()-pausedAt):0));
 }
 
 function updateAll(){
@@ -72,6 +75,7 @@ function updateAll(){
 function startTimer(){if(timerId)clearInterval(timerId);timerId=setInterval(updateAll,1000);}
 
 addBtn.addEventListener('click',()=>{
+  if(paused)return; // нельзя добавлять во время паузы
   const now=Date.now();
   if(now-lastAddAt<MIN_ADD_INTERVAL)return;
   lastAddAt=now;
@@ -84,9 +88,32 @@ normMinusBtn.addEventListener('click',()=>{if(packs>0)packs--;updateAll();});
 psBtn.addEventListener('click',()=>{psCount++;psCountEl.textContent=psCount;});
 psMinusBtn.addEventListener('click',()=>{if(psCount>0)psCount--;psCountEl.textContent=psCount;});
 
+pauseBtn.addEventListener('click',()=>{
+  if(!startTime)return;
+  if(!paused){
+    paused=true;
+    pausedAt=Date.now();
+    pauseBtn.textContent='Wznów';
+    addBtn.classList.add('paused');
+    addBtn.disabled=true;
+  }else{
+    paused=false;
+    pausedTotal+=Date.now()-pausedAt;
+    pausedAt=0;
+    pauseBtn.textContent='Pauza';
+    addBtn.classList.remove('paused');
+    addBtn.disabled=false;
+  }
+  updateAll();
+});
+
 resetBtn.addEventListener('click',()=>{
   if(timerId)clearInterval(timerId);
   startTime=null;packs=0;psCount=0;
+  paused=false;pausedAt=0;pausedTotal=0;
+  addBtn.disabled=false;
+  addBtn.classList.remove('paused');
+  pauseBtn.textContent='Pauza';
   elUnits.textContent='0';elUPH.textContent='0.00';
   elDevPos.textContent='0';elDevNeg.textContent='0';
   elExtra.textContent='0';elCatch.textContent='0';
