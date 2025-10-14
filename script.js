@@ -15,6 +15,8 @@ const brkH=document.getElementById('brk-h');
 const brkM=document.getElementById('brk-m');
 const psCountEl=document.getElementById('ps');
 const normaInput=document.getElementById('norma-input');
+const startH=document.getElementById('start-h');
+const startM=document.getElementById('start-m');
 
 let startTime=null,packs=0,psCount=0,timerId=null,lastAddAt=0;
 let goalPerHour=+normaInput.value;
@@ -29,6 +31,14 @@ function formatTimeMs(ms){
   const m=Math.floor((totalSec%3600)/60);
   const s=totalSec%60;
   return `${pad2(h)}:${pad2(m)}:${pad2(s)}`;
+}
+
+function getManualStartTime(){
+  const h=+startH.value||0;
+  const m=+startM.value||0;
+  const t=new Date();
+  t.setHours(h,m,0,0);
+  return t;
 }
 
 function getBreakIntervalForDate(ref){
@@ -47,7 +57,6 @@ function computeWorkedMs(now){
         brkPrev=getBreakIntervalForDate(new Date(now.getTime()-86400000));
   const overlapMs=overlap(s,e,brk.start.getTime(),brk.end.getTime())+
                   overlap(s,e,brkPrev.start.getTime(),brkPrev.end.getTime());
-  // вычитаем паузы
   return Math.max(0,e-s-overlapMs-pausedTotal-(paused?(now.getTime()-pausedAt):0));
 }
 
@@ -75,11 +84,11 @@ function updateAll(){
 function startTimer(){if(timerId)clearInterval(timerId);timerId=setInterval(updateAll,1000);}
 
 addBtn.addEventListener('click',()=>{
-  if(paused)return; // нельзя добавлять во время паузы
+  if(paused)return;
   const now=Date.now();
   if(now-lastAddAt<MIN_ADD_INTERVAL)return;
   lastAddAt=now;
-  if(!startTime){startTime=new Date();startTimer();}
+  if(!startTime){startTime=getManualStartTime();startTimer();}
   packs++;
   updateAll();
 });
@@ -123,3 +132,12 @@ resetBtn.addEventListener('click',()=>{
 brkH.addEventListener('input',updateAll);
 brkM.addEventListener('input',updateAll);
 normaInput.addEventListener('input',()=>{goalPerHour=+normaInput.value||0;updateAll();});
+
+startH.addEventListener('input',()=>{
+  if(startTime)startTime=getManualStartTime();
+  updateAll();
+});
+startM.addEventListener('input',()=>{
+  if(startTime)startTime=getManualStartTime();
+  updateAll();
+});
